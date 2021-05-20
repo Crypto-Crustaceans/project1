@@ -1,1 +1,112 @@
-This is a test 
+import yfinance as yf
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+
+def get_ticker_data(ticker, start, end, interval):
+    import yfinance as yf  
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    # download data using yfinance libary
+    df = yf.download(tickers=ticker,start=start,end=end,interval=interval)
+    # add in column showing price % change from start date 
+    df['Percent_Change_From_Startdate'] = [(df['Close'][i] - df['Open'].iloc[0]) / df['Open'].iloc[0] * 100 for i in range(len(df['Open']))]
+    df['Change_Close_Less_Open'] = [df['Close'][i] - df['Open'][i] for i in range(len(df['Open']))]
+    return df
+    
+    df_btc = get_ticker_data(ticker='BTC-USD',start='2021-01-01',end='2021-04-30',interval='1d')
+    df_btc.head()
+    
+    df_doge = get_ticker_data(ticker='DOGE-USD',start='2021-01-01',end='2021-04-30',interval='1d')
+    df_doge.head()
+    
+    df_gme = get_ticker_data(ticker='GME',start='2021-01-01',end='2021-04-30',interval='1d')
+    df_gme.head()
+    
+    import scipy.stats as st
+
+
+
+gme = df_combined['Change_Close_Less_Open_gme']
+spy = df_combined['Change_Close_Less_Open_spy']
+
+
+
+(slope, intercept, rvalue, pvalue, stderr) = st.linregress(gme, spy)
+regress_values = gme * slope + intercept
+regress_eq = (f'''y = {str(round(slope, 3))}x + {str(round(intercept, 3))}
+r^2 = {round(rvalue**2,3)}''')
+
+# format plot
+fig, ax = plt.subplots()
+df_combined.plot(kind='scatter', 
+                 ax=ax, 
+                 x='Change_Close_Less_Open_gme', 
+                 y='Change_Close_Less_Open_spy'
+                )
+
+
+
+ax.plot(gme, regress_values, color = 'r')
+ax.annotate(regress_eq, (100,-0.05), color = 'r', fontsize=11)
+
+ax.set(title='Single Day Range: Gamestop Versus SP500',
+       xlabel = 'Gamestop Range ($)',
+       ylabel = 'S&P500 Range ($)'
+       )
+
+fig.tight_layout();
+
+
+
+correlation = st.pearsonr(gme, spy)
+
+print(f'The correlation is {round(correlation[0], 2)} with R-square value of {round(rvalue**2,3)}')
+
+
+df_amc = get_ticker_data(ticker='amc',start='2021-01-01',end='2021-04-30',interval='1d')
+df_combined_2 = df_gme.join(df_amc, how = 'inner', lsuffix='_gme', rsuffix='_amc')
+
+import scipy.stats as st
+
+# Calculate the correlation coefficient and linear regression model 
+
+gme = df_combined_2['Change_Close_Less_Open_gme']
+amc = df_combined_2['Change_Close_Less_Open_amc']
+
+# calculate and plot the regression line on the scatter plot
+
+(slope, intercept, rvalue, pvalue, stderr) = st.linregress(gme, amc)
+regress_values = gme * slope + intercept
+regress_eq = (f'''y = {str(round(slope, 3))}x + {str(round(intercept, 3))}
+r^2 = {round(rvalue**2,3)}''')
+
+# format plot
+fig, ax = plt.subplots()
+df_combined_2.plot(kind='scatter', 
+                 ax=ax, 
+                 x='Change_Close_Less_Open_gme', 
+                 y='Change_Close_Less_Open_amc'
+                )
+
+# plot trend linear regression line and annotate
+
+ax.plot(gme, regress_values, color = 'r')
+ax.annotate(regress_eq, (100,-0.05), color = 'r', fontsize=11)
+
+ax.set(title='Single Day Range: Gamestop Versus AMC',
+       xlabel = 'Gamestop Range ($)',
+       ylabel = 'AMC ($)'
+       )
+
+fig.tight_layout();
+
+# calculate and print the correlation
+
+correlation = st.pearsonr(gme, amc)
+
+print(f'The correlation is {round(correlation[0], 2)} with R-square value of {round(rvalue**2,3)}')
+
+df_doge.to_csv (r'C:\Users\Darren\Desktop\usc-virt-data-pt-03-2021-u-c\06-Python-APIs\Homework/Dogecoin.csv',index = False, header=True)
+df_btc.to_csv (r'C:\Users\Darren\Desktop\usc-virt-data-pt-03-2021-u-c\06-Python-APIs\Homework/Bitcoin.csv',index = False, header=True)
